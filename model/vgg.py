@@ -96,40 +96,41 @@ class VGG(nn.Module):
         return x
 
     def forward(self, x):
-        x = self.organize_feature(x)
+        x = self.organize_features(x)
         x = x.view(x.size(0), -1)
         x = self._classify(x)
         return x
 
-    def oragnize_features(self, x):
+    def organize_features(self, x):
         in_channels = 3
         count = 0
-        x_feat = None
 
-        for i in clf[self.name]:
+        for i in cfg[self.name]:
             if (i == "M"):
                 x = self.features[count](x)
             else:
                 if self.get_biases:
-                    input_bias = torch.zeros(x.size()).to(x.device)
+                    input_bias = torch.zeros(x.size()).to(x.device) # Zero tensor
                     input_bias, _ = self._linear_block(input_bias, count)
                     self.biases.append(input_bias.detach())
+
                 x, count = self._linear_block(x, count)
 
                 if self.get_features:
                     self.feature_list.append(x)
 
-                x = self.features[count](x)
+                x = self.features[count](x) # ReLU
 
             count = count + 1
 
         return x
 
     def _linear_block(self, x, count):
-        if self.bn:
+
+        if self.bn: # Conv + BN
             x = self.features[count](x)
             count = count + 1
-        x = self.features[count](x)
+        x = self.features[count](x) # Conv
         count = count + 1
         return x, count
 
@@ -147,6 +148,7 @@ class VGG(nn.Module):
                 nn.init.constant_(m.bias, 0)
 
     def make_layers(self, cfg, batch_norm = True):
+
         layers = []
         in_channels = 3
         index = 0
@@ -269,4 +271,7 @@ def vgg19_bn(pretrained=False, **kwargs):
     return model
 
 if __name__ == "__main__":
-    vgg11(pretrained = True)
+    vgg = vgg11_bn(pretrained = True)
+    test = torch.randn((1, 3, 224, 224))
+    vgg(test)
+    
