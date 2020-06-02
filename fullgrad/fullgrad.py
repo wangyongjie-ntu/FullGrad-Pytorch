@@ -30,7 +30,7 @@ class FullGrad(object):
         input = torch.randn(self.img_size).to(device)
         self.model.eval()
 
-        output = self.model(input)
+        raw_output = self.model(input)
         # compute the full-gradient
         input_grad, bias_grad = self._getGradients(input, target_class = None)
 
@@ -40,8 +40,8 @@ class FullGrad(object):
 
         # compare raw output and full grad sum
         err_message = "\nThis is due to incorrect computation of bias-gradients. Please check models/vgg.py for more information."
-        err_string = "Completeness test failed! Raw output = " + str(raw_output.max().item()) + " Full-gradient sum = " + str(fullgradient_sum.item())
-        assert isclose(raw_output.max().item(), fullgradient_sum.item(), rel_tol=0.00001), err_string + err_message
+        err_string = "Completeness test failed! Raw output = " + str(raw_output.max().item()) + " Full-gradient sum = " + str(fullgrad_sum.item())
+        assert isclose(raw_output.max().item(), fullgrad_sum.item(), rel_tol=0.00001), err_string + err_message
         print('Completeness test passed for FullGrad.')
 
     def _getGradients(self, image, target_class = None):
@@ -49,8 +49,8 @@ class FullGrad(object):
         compute full-gradient decomposition for an image
         """
 
-        image =  image.requiresg_grad()
-        out, features = self.model.getFeature(image)
+        image =  image.requires_grad_()
+        out, features = self.model.getFeatures(image)
 
         if target_class is None:
             target_class = out.data.max(1, keepdim = True)[1]
@@ -65,7 +65,7 @@ class FullGrad(object):
 
         bias_grad = []
         for i in range(1, len(gradients)):
-            bias_grad.append(gradient[i] * self.blockwise_biases[i])
+            bias_grad.append(gradients[i] * self.blockwise_biases[i])
         
         return gradients[0], bias_grad
 
@@ -92,9 +92,9 @@ class FullGrad(object):
             if len(intermediate_grad[i].size()) == len(img_size):
                 temp = self._postprecess(intermediate_grad[i])
                 if len(img_size) == 3:
-                    gradient = F.interpolate(temp, size=im_size[2], mode = 'bilinear', align_corners=False)
+                    gradient = F.interpolate(temp, size=img_size[2], mode = 'bilinear', align_corners=False)
                 else:
-                    gradient = F.interpolate(temp, size=(im_size[2], im_size[3]), mode = 'bilinear', align_corners=False)
+                    gradient = F.interpolate(temp, size=(img_size[2], img_size[3]), mode = 'bilinear', align_corners=False)
                 cam += gradient.sum(1, keepdim = True)
 
         return cam

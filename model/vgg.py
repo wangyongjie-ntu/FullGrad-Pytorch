@@ -58,7 +58,7 @@ class VGG(nn.Module):
         self.biases = []
         self.feature_list = []
 
-    def getBias(self):
+    def getBiases(self):
         """
         Returns the explicit biases arising from BatchNorm of Convolutional layers
         """

@@ -7,11 +7,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-def SimpleFullGrad(object):
-    """
-
-    """
-
+class FullGradSimple(object):
     def __init__(self, model):
         self.model = model
 
@@ -19,7 +15,7 @@ def SimpleFullGrad(object):
         '''
         '''
         image = image.requires_grad_()
-        out, features = self.model(image)
+        out, features = self.model.getFeatures(image)
         
         if target_class is None:
             target_class = out.data.max(1, keepdim = True)[1]
@@ -30,7 +26,7 @@ def SimpleFullGrad(object):
 
         self.model.zero_grad()
         # compute the gradient w.r.t input and intermediate features
-        gradient = torch.autograd.grad(output = agg, inputs = features)
+        gradient = torch.autograd.grad(outputs = agg, inputs = features)
         
         # input gradient: gradient[0]
         # imtermediate gradient: gradient[1:]
@@ -59,9 +55,9 @@ def SimpleFullGrad(object):
             if len(intermediate_grad[i].size()) == len(img_size):
                 temp = self._postprecess(intermediate_grad[i])
                 if len(img_size) == 3:
-                    gradient = F.interpolate(temp, size=im_size[2], mode = 'bilinear', align_corners=False)
+                    gradient = F.interpolate(temp, size=img_size[2], mode = 'bilinear', align_corners=False)
                 else:
-                    gradient = F.interpolate(temp, size=(im_size[2], im_size[3]), mode = 'bilinear', align_corners=False)
+                    gradient = F.interpolate(temp, size=(img_size[2], img_size[3]), mode = 'bilinear', align_corners=False)
                 cam += gradient.sum(1, keepdim = True)
 
         return cam

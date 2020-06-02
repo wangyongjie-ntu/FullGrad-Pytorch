@@ -23,10 +23,6 @@ class NormalizeInverse(transforms.Normalize):
     def __call__(self, tensor):
         return super(NormalizeInverse, self).__call__(tensor.clone())
 
-def create_folder(folder_name):
-
-    if os.path.isdir(folder_name):
-        os.mkdir(folder_name)
 
 def save_saliency_map(image, saliency_map, filename):
     """
@@ -45,7 +41,7 @@ def save_saliency_map(image, saliency_map, filename):
     saliency_map = np.uint8(saliency_map * 255).transpose(1, 2, 0)
     saliency_map = cv2.resize(saliency_map, (224, 224))
 
-    image = np.unit8(image * 255).transpose(1, 2, 0)
+    image = np.uint8(image * 255).transpose(1, 2, 0)
     image = cv2.resize(image, (224, 224))
 
     # Apply JET colormap
@@ -55,4 +51,4 @@ def save_saliency_map(image, saliency_map, filename):
     img_with_heatmap = np.float32(color_heatmap) + np.float32(image)
     img_with_heatmap = img_with_heatmap / np.max(img_with_heatmap)
 
-    cv2.imwrite(filename, np.unit8(255 * img_with_heatmap))
+    cv2.imwrite(filename, np.uint8(255 * img_with_heatmap))
