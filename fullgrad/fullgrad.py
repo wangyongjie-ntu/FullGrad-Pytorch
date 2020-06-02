@@ -62,8 +62,12 @@ class FullGrad(object):
         self.model.zero_grad()
         # gradients w.r.t. input and features
         gradients = torch.autograd.grad(outputs = agg, inputs = features)
+
+        bias_grad = []
+        for i in range(1, len(gradients)):
+            bias_grad.append(gradient[i] * self.blockwise_biases[i])
         
-        return gradients[0], gradients[1:]
+        return gradients[0], bias_grad
 
     def _postprecess(self, input, eps = 1e-6):
         input = abs(input)
